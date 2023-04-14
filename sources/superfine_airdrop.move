@@ -90,6 +90,7 @@ module superfine::superfine_airdrop {
 		// Verify the signature
 		let message = campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
+		vector::append(&mut message, operator_pubkey);
 		let validity = ed25519::ed25519_verify(
 			&signature,
 			&operator_pubkey,
@@ -137,6 +138,7 @@ module superfine::superfine_airdrop {
 		// Verify the signature
 		let message = campaign.campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
+		vector::append(&mut message, operator_pubkey);
 		let validity = ed25519::ed25519_verify(
 			&signature,
 			&operator_pubkey,
@@ -165,36 +167,51 @@ module superfine::superfine_airdrop {
 		object::id(campaign)
 	}
 
-	public entry fun list_asset<T: key + store>(
+	public entry fun list_assets<T: key + store>(
 		campaign: &mut AirdropCampaign,
-		asset: T,
+		assets: vector<T>,
 		ctx: &mut TxContext
-	): ID {
+	): vector<ID> {
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
 		assert!(!campaign.airdrop_started, ECampaignAirdropStarted);
-		assert!(campaign.asset_count < campaign.num_assets, ETooManyAssets);
-		let asset_id = object::id<T>(&asset);
-		dof::add(&mut campaign.id, asset_id, asset);
-		campaign.asset_count = campaign.asset_count + 1;
-		asset_id
+
+		let total_assets = campaign.asset_count + vector::length(&assets);
+		assert!(total_assets <= campaign.num_assets, ETooManyAssets);
+		campaign.asset_count = total_assets;
+
+		let asset_ids = vector::empty<ID>();
+		while (vector::length(&assets) > 0) {
+			let asset = vector::pop_back(&mut assets);
+			let asset_id = object::id<T>(&asset);
+			dof::add(&mut campaign.id, asset_id, asset);
+			vector::push_back(&mut asset_ids, asset_id);
+		};
+		vector::destroy_empty(assets);
+		asset_ids
 	}
 
-	public entry fun delist_asset<T: key + store>(
+	public entry fun delist_assets<T: key + store>(
 		campaign: &mut AirdropCampaign,
-		asset_id: ID,
+		asset_ids: vector<ID>,
 		ctx: &mut TxContext
 	) {
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
 		assert!(!campaign.airdrop_started, ECampaignAirdropStarted);
-		let asset = dof::remove<ID, T>(&mut campaign.id, asset_id);
-		campaign.asset_count = campaign.asset_count - 1;
-		transfer::public_transfer(asset, tx_context::sender(ctx));
+
+		campaign.asset_count = campaign.asset_count - vector::length(&asset_ids);
+		while (vector::length(&asset_ids) > 0) {
+			let asset = dof::remove<ID, T>(
+				&mut campaign.id,
+				vector::pop_back(&mut asset_ids)
+			);
+			transfer::public_transfer(asset, tx_context::sender(ctx));
+		};
 	}
 
-	public entry fun airdrop_asset<T: key + store>(
+	public entry fun airdrop_assets<T: key + store>(
 		platform: &mut AirdropPlatform,
 		campaign: &mut AirdropCampaign,
-		asset_id: ID,
+		asset_ids: vector<ID>,
 		winner: address,
 		ctx: &TxContext
 	) {
@@ -202,8 +219,12 @@ module superfine::superfine_airdrop {
 		if (!campaign.airdrop_started) {
 			campaign.airdrop_started = true;
 		};
-		let asset = dof::remove<ID, T>(&mut campaign.id, asset_id);
-		transfer::public_transfer(asset, winner);
+
+		while (vector::length(&asset_ids) > 0) {
+			let asset_id = vector::pop_back(&mut asset_ids);
+			let asset = dof::remove<ID, T>(&mut campaign.id, asset_id);
+			transfer::public_transfer(asset, winner);
+		}
 	}
 
 	fun pubkey_to_address(pubkey: vector<u8>): address {
