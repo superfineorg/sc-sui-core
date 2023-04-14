@@ -16,7 +16,7 @@ module superfine::superfine_claim {
 	const ENotAdmin: u64 = 135289670000 + 3;
 	const ENotOperator: u64 = 135289670000 + 4;
 
-	struct ClaimingVault has key {
+	struct ClaimingPlatform has key {
 		id: UID,
 		admin: address,
 		operators: VecSet<address>
@@ -29,7 +29,7 @@ module superfine::superfine_claim {
 	}
 
 	fun init(ctx: &mut TxContext) {
-		transfer::share_object(ClaimingVault {
+		transfer::share_object(ClaimingPlatform {
 			id: object::new(ctx),
 			admin: tx_context::sender(ctx),
 			operators: vec_set::empty()
@@ -37,25 +37,25 @@ module superfine::superfine_claim {
 	}
 
 	public entry fun set_operator(
-		vault: &mut ClaimingVault,
+		platform: &mut ClaimingPlatform,
 		operator: address,
 		is_operator: bool,
 		ctx: &mut TxContext
 	) {
-		assert!(tx_context::sender(ctx) == vault.admin, ENotAdmin);
+		assert!(tx_context::sender(ctx) == platform.admin, ENotAdmin);
 		if (is_operator) {
-			if (!vec_set::contains(&vault.operators, &operator)) {
-				vec_set::insert(&mut vault.operators, operator);
+			if (!vec_set::contains(&platform.operators, &operator)) {
+				vec_set::insert(&mut platform.operators, operator);
 			}
 		} else {
-			if (vec_set::contains(&vault.operators, &operator)) {
-				vec_set::remove(&mut vault.operators, &operator);
+			if (vec_set::contains(&platform.operators, &operator)) {
+				vec_set::remove(&mut platform.operators, &operator);
 			}
 		}
 	}
 
 	public entry fun list_asset<T: key + store>(
-		vault: &mut ClaimingVault,
+		platform: &mut ClaimingPlatform,
 		asset: T,
 		ctx: &mut TxContext
 	): ID {
@@ -66,26 +66,26 @@ module superfine::superfine_claim {
 			owner: tx_context::sender(ctx),
 		};
 		let listing_id = object::id(&listing);
-		dof::add(&mut vault.id, asset_id, asset);
-		dof::add(&mut vault.id, listing_id, listing);
+		dof::add(&mut platform.id, asset_id, asset);
+		dof::add(&mut platform.id, listing_id, listing);
 		listing_id
 	}
 
 	public entry fun delist_asset<T: key + store>(
-		vault: &mut ClaimingVault,
+		platform: &mut ClaimingPlatform,
 		listing_id: ID,
 		ctx: &mut TxContext
 	) {
-		let listing = dof::remove<ID, Listing<T>>(&mut vault.id, listing_id);
+		let listing = dof::remove<ID, Listing<T>>(&mut platform.id, listing_id);
 		let Listing { id, asset_id, owner } = listing;
 		assert!(tx_context::sender(ctx) == owner, ENotAssetOwner);
-		let asset = dof::remove<ID, T>(&mut vault.id, asset_id);
+		let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
 		object::delete(id);
 		transfer::public_transfer(asset, tx_context::sender(ctx));
 	}
 
-	public entry fun claim_assets<T: key + store>(
-		vault: &mut ClaimingVault,
+	public entry fun claim_asset<T: key + store>(
+		platform: &mut ClaimingPlatform,
 		campaign_id: vector<u8>,
 		campaign_creator: address,
 		listing_id: ID,
@@ -95,9 +95,9 @@ module superfine::superfine_claim {
 	) {
 		// Verify the operator public key
 		let operator = pubkey_to_address(operator_pubkey);
-		assert!(vec_set::contains(&vault.operators, &operator), ENotOperator);
+		assert!(vec_set::contains(&platform.operators, &operator), ENotOperator);
 
-		// Verify the signatures
+		// Verify the signature
 		let message = campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&campaign_creator));
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
@@ -111,14 +111,14 @@ module superfine::superfine_claim {
 		assert!(validity, EInvalidSignature);
 
 		// Remove listing
-		let listing = dof::remove<ID, Listing<T>>(&mut vault.id, listing_id);
+		let listing = dof::remove<ID, Listing<T>>(&mut platform.id, listing_id);
 		let Listing { id, asset_id, owner } = listing;
 		assert!(campaign_creator == owner, ENotCampaignCreator);
 		
 		// Return the claimed assets
-		let item = dof::remove<ID, T>(&mut vault.id, asset_id);
+		let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
 		object::delete(id);
-		transfer::public_transfer(item, tx_context::sender(ctx));
+		transfer::public_transfer(asset, tx_context::sender(ctx));
 	}
 
 	fun pubkey_to_address(pubkey: vector<u8>): address {
