@@ -167,10 +167,12 @@ module superfine::superfine_airdrop {
 	}
 
 	public entry fun list_assets<T: key + store>(
-		campaign: &mut AirdropCampaign,
+		platform: &mut AirdropPlatform,
+		campaign_id: ID,
 		assets: vector<T>,
 		ctx: &mut TxContext
 	): vector<ID> {
+		let campaign = dof::borrow_mut<ID, AirdropCampaign>(&mut platform.id, campaign_id);
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
 		assert!(!campaign.airdrop_started, ECampaignAirdropStarted);
 
@@ -190,10 +192,12 @@ module superfine::superfine_airdrop {
 	}
 
 	public entry fun delist_assets<T: key + store>(
-		campaign: &mut AirdropCampaign,
+		platform: &mut AirdropPlatform,
+		campaign_id: ID,
 		asset_ids: vector<ID>,
 		ctx: &mut TxContext
 	) {
+		let campaign = dof::borrow_mut<ID, AirdropCampaign>(&mut platform.id, campaign_id);
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
 		assert!(!campaign.airdrop_started, ECampaignAirdropStarted);
 
@@ -209,11 +213,12 @@ module superfine::superfine_airdrop {
 
 	public entry fun airdrop_assets<T: key + store>(
 		platform: &mut AirdropPlatform,
-		campaign: &mut AirdropCampaign,
+		campaign_id: ID,
 		asset_ids: vector<ID>,
 		winner: address,
 		ctx: &TxContext
 	) {
+		let campaign = dof::borrow_mut<ID, AirdropCampaign>(&mut platform.id, campaign_id);
 		assert!(vec_set::contains(&platform.operators, &tx_context::sender(ctx)), ENotOperator);
 		if (!campaign.airdrop_started) {
 			campaign.airdrop_started = true;
