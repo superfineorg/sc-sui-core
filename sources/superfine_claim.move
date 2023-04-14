@@ -8,7 +8,7 @@ module superfine::superfine_claim {
 	use sui::ed25519;
 	use sui::hash;
 	use sui::vec_set::{Self, VecSet};
-	use sui::address;
+	use superfine::utils;
 
 	const ENotAssetOwner: u64 = 135289670000;
 	const ENotCampaignCreator: u64 = 135289670000 + 1;
@@ -109,7 +109,7 @@ module superfine::superfine_claim {
 		ctx: &TxContext
 	) {
 		// Verify the operator public key
-		let operator = pubkey_to_address(operator_pubkey);
+		let operator = utils::pubkey_to_address(operator_pubkey);
 		assert!(vec_set::contains(&platform.operators, &operator), ENotOperator);
 
 		// Verify the signature
@@ -141,14 +141,6 @@ module superfine::superfine_claim {
 			transfer::public_transfer(asset, tx_context::sender(ctx));
 		};
 		vector::destroy_empty(listing_ids);
-	}
-
-	fun pubkey_to_address(pubkey: vector<u8>): address {
-		let scheme: u8 = 0; // ED25519 scheme
-		let data = &mut vector::empty<u8>();
-		vector::push_back(data, scheme);
-		vector::append(data, pubkey);
-		address::from_bytes(hash::blake2b256(data))
 	}
 
 	#[test_only]

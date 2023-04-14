@@ -8,10 +8,10 @@ module superfine::superfine_airdrop {
 	use sui::ed25519;
 	use sui::hash;
 	use sui::vec_set::{Self, VecSet};
-	use sui::address;
 	use sui::coin::{Self, Coin};
     use sui::sui::SUI;
 	use sui::balance::{Self, Balance};
+	use superfine::utils;
 
 	const ECampaignNotExists: u64 = 135289670000;
 	const ENotCampaignCreator: u64 = 135289670000 + 1;
@@ -51,11 +51,6 @@ module superfine::superfine_airdrop {
 		});
 	}
 
-	// TODO: Implemment this function
-	public entry fun estimate_airdrop_fee(num_assets: u64): u64 {
-		num_assets * 10
-	}
-
 	public entry fun set_operator(
 		platform: &mut AirdropPlatform,
 		operator: address,
@@ -78,18 +73,21 @@ module superfine::superfine_airdrop {
 		platform: &mut AirdropPlatform,
 		campaign_id: vector<u8>,
 		num_assets: u64,
+		airdrop_fee: u64,
 		operator_pubkey: vector<u8>,
 		signature: vector<u8>,
 		payment: &mut Coin<SUI>,
 		ctx: &mut TxContext
 	): ID {
 		// Verify the operator public key
-		let operator = pubkey_to_address(operator_pubkey);
+		let operator = utils::pubkey_to_address(operator_pubkey);
 		assert!(vec_set::contains(&platform.operators, &operator), ENotOperator);
 
 		// Verify the signature
 		let message = campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
+		vector::append(&mut message, utils::u64_to_bytes(num_assets));
+		vector::append(&mut message, utils::u64_to_bytes(airdrop_fee));
 		vector::append(&mut message, operator_pubkey);
 		let validity = ed25519::ed25519_verify(
 			&signature,
@@ -102,8 +100,7 @@ module superfine::superfine_airdrop {
 		assert!(!vec_set::contains(&platform.campaign_ids, &campaign_id), ECampaignAlreadyCreated);
 
 		// Check payment
-		let charged_fee = estimate_airdrop_fee(num_assets);
-		let airdrop_coin = coin::split<SUI>(payment, charged_fee, ctx);
+		let airdrop_coin = coin::split<SUI>(payment, airdrop_fee, ctx);
 		coin::put(&mut platform.airdrop_fee, airdrop_coin);
 
 		// Create the campaign
@@ -112,7 +109,7 @@ module superfine::superfine_airdrop {
 			campaign_id,
 			creator: tx_context::sender(ctx),
 			num_assets,
-			charged_fee,
+			charged_fee: airdrop_fee,
 			airdrop_started: false,
 			asset_count: 0
 		};
@@ -126,18 +123,21 @@ module superfine::superfine_airdrop {
 		platform: &mut AirdropPlatform,
 		campaign: &mut AirdropCampaign,
 		new_num_assets: u64,
+		new_airdrop_fee: u64,
 		operator_pubkey: vector<u8>,
 		signature: vector<u8>,
 		payment: &mut Coin<SUI>,
 		ctx: &mut TxContext
 	): ID {
 		// Verify the operator public key
-		let operator = pubkey_to_address(operator_pubkey);
+		let operator = utils::pubkey_to_address(operator_pubkey);
 		assert!(vec_set::contains(&platform.operators, &operator), ENotOperator);
 
 		// Verify the signature
 		let message = campaign.campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
+		vector::append(&mut message, utils::u64_to_bytes(new_num_assets));
+		vector::append(&mut message, utils::u64_to_bytes(new_airdrop_fee));
 		vector::append(&mut message, operator_pubkey);
 		let validity = ed25519::ed25519_verify(
 			&signature,
@@ -153,16 +153,15 @@ module superfine::superfine_airdrop {
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
 
 		// Check payment
-		let new_charged_fee = estimate_airdrop_fee(new_num_assets);
-		if (new_charged_fee > campaign.charged_fee) {
-			let airdrop_coin = coin::split<SUI>(payment, new_charged_fee - campaign.charged_fee, ctx);
+		if (new_airdrop_fee > campaign.charged_fee) {
+			let airdrop_coin = coin::split<SUI>(payment, new_airdrop_fee - campaign.charged_fee, ctx);
 			coin::put(&mut platform.airdrop_fee, airdrop_coin);
 		};
 
 		// Update the campaign
 		campaign.num_assets = new_num_assets;
-		if (new_charged_fee > campaign.charged_fee) {
-			campaign.charged_fee = new_charged_fee;
+		if (new_airdrop_fee > campaign.charged_fee) {
+			campaign.charged_fee = new_airdrop_fee;
 		};
 		object::id(campaign)
 	}
@@ -225,14 +224,6 @@ module superfine::superfine_airdrop {
 			let asset = dof::remove<ID, T>(&mut campaign.id, asset_id);
 			transfer::public_transfer(asset, winner);
 		}
-	}
-
-	fun pubkey_to_address(pubkey: vector<u8>): address {
-		let scheme: u8 = 0; // ED25519 scheme
-		let data = &mut vector::empty<u8>();
-		vector::push_back(data, scheme);
-		vector::append(data, pubkey);
-		address::from_bytes(hash::blake2b256(data))
 	}
 
 	#[test_only]
