@@ -13,7 +13,7 @@ module superfine::superfine_airdrop {
 	use sui::balance::{Self, Balance};
 	use superfine::utils;
 
-	const ECampaignNotExists: u64 = 135289670000;
+	const ECampaignAirdropStarted: u64 = 135289670000;
 	const ENotCampaignCreator: u64 = 135289670000 + 1;
 	const EInvalidSignature: u64 =  135289670000 + 2;
 	const ENotAdmin: u64 = 135289670000 + 3;
@@ -21,7 +21,6 @@ module superfine::superfine_airdrop {
 	const ECampaignAlreadyCreated: u64 = 135289670000 + 5;
 	const ETooManyAssets: u64 = 135289670000 + 6;
 	const ENumAssetsTooLow: u64 = 135289670000 + 7;
-	const ECampaignAirdropStarted: u64 = 135289670000 + 8;
 
 	struct AirdropPlatform has key {
 		id: UID,
@@ -121,7 +120,7 @@ module superfine::superfine_airdrop {
 
 	public entry fun update_campaign(
 		platform: &mut AirdropPlatform,
-		campaign: &mut AirdropCampaign,
+		campaign_id: ID,
 		new_num_assets: u64,
 		new_airdrop_fee: u64,
 		operator_pubkey: vector<u8>,
@@ -129,6 +128,8 @@ module superfine::superfine_airdrop {
 		payment: &mut Coin<SUI>,
 		ctx: &mut TxContext
 	): ID {
+		let campaign = dof::borrow_mut<ID, AirdropCampaign>(&mut platform.id, campaign_id);
+
 		// Verify the operator public key
 		let operator = utils::pubkey_to_address(operator_pubkey);
 		assert!(vec_set::contains(&platform.operators, &operator), ENotOperator);
@@ -147,7 +148,6 @@ module superfine::superfine_airdrop {
 		assert!(validity, EInvalidSignature);
 
 		// Some extra checks
-		assert!(vec_set::contains(&platform.campaign_ids, &campaign.campaign_id), ECampaignNotExists);
 		assert!(!campaign.airdrop_started, ECampaignAirdropStarted);
 		assert!(new_num_assets >= campaign.asset_count, ENumAssetsTooLow);
 		assert!(tx_context::sender(ctx) == campaign.creator, ENotCampaignCreator);
