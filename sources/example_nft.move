@@ -13,14 +13,13 @@ module superfine::example_nft {
 		quantity: u64,
 		ctx: &mut TxContext
 	): vector<ID> {
-		let i = 0;
 		let nft_ids = vector::empty<ID>();
-		while (i < quantity) {
+		while (quantity > 0) {
 			let nft = ExampleNft { id: object::new(ctx) };
 			let nft_id = object::id(&nft);
 			transfer::transfer(nft, recipient);
 			vector::push_back(&mut nft_ids, nft_id);
-			i = i + 1;
+			quantity = quantity - 1;
 		};
 		nft_ids
 	}
