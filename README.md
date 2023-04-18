@@ -33,7 +33,7 @@ $ sui move build
 ## Publish the package
 
 ```shell
-$ sui move publish --gas-budget 30000000
+$ sui client publish --gas-budget 30000000
 ```
 
 ## Interact with the contracts

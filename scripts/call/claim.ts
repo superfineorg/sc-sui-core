@@ -49,7 +49,7 @@ const listAssets = async () => {
       txb.object(CLAIMING_PLATFORM),
       txb.makeMoveVec({
         objects: [
-          txb.object("0xfa4a82cb6c962523c88e77c5c31355093bae01cb11de86e711dcb2e63e2d8f98")
+          txb.object("0xb2d1fefebac03b6cab92f2a21fa4b3aa0a65061392111a3142f1ddb309aedb31")
         ]
       })
     ]
@@ -67,7 +67,7 @@ const delistAssets = async () => {
       txb.object(CLAIMING_PLATFORM),
       txb.makeMoveVec({
         objects: [
-          txb.object("0x92612443c35b589507316b420a4a9d9d0b87851482e9aa58fe53044d91a9b2cf")
+          txb.object("0x0bb50da2e25d5b22a9a40fc7f55c20aa4278b218ad36d871cc2f0839a863c406")
         ]
       })
     ]
@@ -98,4 +98,4 @@ const claimAssets = async () => {
   await executeTxb(txb, winner);
 };
 
-setOperators();
+delistAssets();
