@@ -9,6 +9,7 @@ module superfine::superfine_claim {
 	use sui::hash;
 	use sui::address;
 	use sui::vec_set::{Self, VecSet};
+	use sui::event;
 
 	const ENotAssetOwner: u64 = 135289670000;
 	const ENotCampaignCreator: u64 = 135289670000 + 1;
@@ -26,6 +27,18 @@ module superfine::superfine_claim {
 		id: UID,
 		asset_id: ID,
 		owner: address
+	}
+
+	struct EventAssetsListed has copy, drop {
+		listing_ids: vector<ID>
+	}
+
+	struct EventAssetsDelisted has copy, drop {
+		asset_ids: vector<ID>
+	}
+
+	struct EventAssetsClaimed has copy, drop {
+		winner: address
 	}
 
 	fun init(ctx: &mut TxContext) {
@@ -74,6 +87,7 @@ module superfine::superfine_claim {
 			vector::push_back(&mut listing_ids, listing_id);
 		};
 		vector::destroy_empty(assets);
+		event::emit(EventAssetsListed { listing_ids });
 		listing_ids
 	}
 
@@ -96,6 +110,7 @@ module superfine::superfine_claim {
 			vector::push_back(&mut asset_ids, asset_id);
 		};
 		vector::destroy_empty(listing_ids);
+		event::emit(EventAssetsDelisted { asset_ids });
 		asset_ids
 	}
 
@@ -141,6 +156,7 @@ module superfine::superfine_claim {
 			transfer::public_transfer(asset, tx_context::sender(ctx));
 		};
 		vector::destroy_empty(listing_ids);
+		event::emit(EventAssetsClaimed { winner: tx_context::sender(ctx) });
 	}
 
 	fun pubkey_to_address(pubkey: vector<u8>): address {

@@ -8,7 +8,7 @@ module superfine::example_nft {
 		id: UID
 	}
 
-	public fun mint_nfts(
+	public entry fun mint_nfts(
 		recipient: address,
 		quantity: u64,
 		ctx: &mut TxContext

@@ -1,0 +1,29 @@
+{
+  "name": "sui_smart_contracts",
+  "version": "1.0.0",
+  "description": "```shell $ sui move test ```",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/gamejamcoteam/superfine-sui-core.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://bitbucket.org/gamejamcoteam/superfine-sui-core/issues"
+  },
+  "homepage": "https://bitbucket.org/gamejamcoteam/superfine-sui-core#readme",
+  "devDependencies": {
+    "@mysten/sui.js": "^0.32.1",
+    "@types/node": "^18.15.11",
+    "child_process": "^1.0.2",
+    "dotenv": "^16.0.3",
+    "fs-promise": "^2.0.3"
+  }
+}
