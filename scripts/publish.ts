@@ -6,7 +6,7 @@ import { execSync } from "child_process";
 const MODULE = "SuiSmartContracts";
 const DEPLOY_INFO_PATH = "./deployed_modules/output.json";
 
-const deploy = async () => {
+const publish = async () => {
   const [provider, , signer] = prepareSigner(process.env.MNEMONIC);
   const compiledResult: { modules: string[], dependencies: string[]; } = JSON.parse(
     execSync(
@@ -61,4 +61,4 @@ const deploy = async () => {
   }
 };
 
-deploy();
+publish();

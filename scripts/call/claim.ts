@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PACKAGE = "0x4003ce8020e59cedf1a024f537f2d34a1025adbb86ef8f49c7ece9564b85bd18";
-const CLAIMING_PLATFORM = "0x6638fcace8e39faf9889cb4870868b75e3b41e3070f39ab24eceb250f49c5022";
+const PACKAGE = "0xae0b7f836e19277032079739d7d69f77f75774fd56b387425685005b8e716243";
+const CLAIMING_PLATFORM = "0xb9e6439e92e3ae4099a6e86e660b3399074b2c05d3ae08d979ea3c1bc7f05cb6";
 const ADMIN = 0;
 const WINNER = 0;
 const CAMPAIGN_CREATOR = 0;
@@ -18,7 +18,7 @@ const mintNfts = async () => {
     target: `${PACKAGE}::example_nft::mint_nfts`,
     arguments: [
       txb.pure(creatorAddress),
-      txb.pure(8)
+      txb.pure(7)
     ]
   });
   await executeTxb(txb, creatorSigner);
@@ -49,7 +49,7 @@ const listAssets = async () => {
       txb.object(CLAIMING_PLATFORM),
       txb.makeMoveVec({
         objects: [
-          txb.object("0xb2d1fefebac03b6cab92f2a21fa4b3aa0a65061392111a3142f1ddb309aedb31")
+          txb.object("0x6d2233189e4483e17c4b1d3389928a6f987a7cd0cce7f479425face85048ab65")
         ]
       })
     ]
@@ -67,7 +67,7 @@ const delistAssets = async () => {
       txb.object(CLAIMING_PLATFORM),
       txb.makeMoveVec({
         objects: [
-          txb.object("0x0bb50da2e25d5b22a9a40fc7f55c20aa4278b218ad36d871cc2f0839a863c406")
+          txb.pure("0x95e2d8389c5534899edcadcf5c6eab623e73791a7c20896db1864117c6589385")
         ]
       })
     ]

@@ -104,10 +104,9 @@ module superfine::superfine_claim {
 			);
 			assert!(tx_context::sender(ctx) == owner, ENotAssetOwner);
 			let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
-			let asset_id = object::id(&asset);
+			vector::push_back(&mut asset_ids, object::id(&asset));
 			object::delete(id);
 			transfer::public_transfer(asset, tx_context::sender(ctx));
-			vector::push_back(&mut asset_ids, asset_id);
 		};
 		vector::destroy_empty(listing_ids);
 		event::emit(EventAssetsDelisted { asset_ids });
