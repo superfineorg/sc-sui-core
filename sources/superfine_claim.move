@@ -33,8 +33,8 @@ module superfine::superfine_claim {
 		listing_ids: vector<ID>
 	}
 
-	struct EventAssetsDelisted has copy, drop {
-		asset_ids: vector<ID>
+	struct EventAssetDelisted has copy, drop {
+		asset_id: ID
 	}
 
 	struct EventAssetsClaimed has copy, drop {
@@ -91,33 +91,29 @@ module superfine::superfine_claim {
 		listing_ids
 	}
 
-	public entry fun delist_assets<T: key + store>(
+	public entry fun delist_asset<T: key + store>(
 		platform: &mut ClaimingPlatform,
-		listing_ids: vector<ID>,
+		listing_id: ID,
 		ctx: &mut TxContext
-	): vector<ID> {
-		let asset_ids = vector::empty<ID>();
-		while (vector::length(&listing_ids) > 0) {
-			let Listing { id, asset_id, owner } = dof::remove<ID, Listing<T>>(
-				&mut platform.id,
-				vector::pop_back(&mut listing_ids)
-			);
-			assert!(tx_context::sender(ctx) == owner, ENotAssetOwner);
-			let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
-			vector::push_back(&mut asset_ids, object::id(&asset));
-			object::delete(id);
-			transfer::public_transfer(asset, tx_context::sender(ctx));
-		};
-		vector::destroy_empty(listing_ids);
-		event::emit(EventAssetsDelisted { asset_ids });
-		asset_ids
+	): ID {
+		let Listing { id, asset_id, owner } = dof::remove<ID, Listing<T>>(
+			&mut platform.id,
+			listing_id
+		);
+		assert!(tx_context::sender(ctx) == owner, ENotAssetOwner);
+		let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
+		let asset_id = object::id(&asset);
+		object::delete(id);
+		transfer::public_transfer(asset, tx_context::sender(ctx));
+		event::emit(EventAssetDelisted { asset_id });
+		asset_id
 	}
 
-	public entry fun claim_assets<T: key + store>(
+	public entry fun claim_asset<T: key + store>(
 		platform: &mut ClaimingPlatform,
 		campaign_id: vector<u8>,
 		campaign_creator: address,
-		listing_ids: vector<ID>,
+		listing_id: ID,
 		operator_pubkey: vector<u8>,
 		signature: vector<u8>,
 		ctx: &TxContext
@@ -130,11 +126,7 @@ module superfine::superfine_claim {
 		let message = campaign_id;
 		vector::append(&mut message, bcs::to_bytes(&campaign_creator));
 		vector::append(&mut message, bcs::to_bytes(&tx_context::sender(ctx)));
-		let i = 0;
-		while (i < vector::length(&listing_ids)) {
-			vector::append(&mut message, object::id_to_bytes(vector::borrow(&listing_ids, i)));
-			i = i + 1;
-		};
+		vector::append(&mut message, object::id_to_bytes(&listing_id));
 		vector::append(&mut message, operator_pubkey);
 		let validity = ed25519::ed25519_verify(
 			&signature,
@@ -144,17 +136,14 @@ module superfine::superfine_claim {
 		assert!(validity, EInvalidSignature);
 
 		// Return the assets to the winner
-		while (vector::length(&listing_ids) > 0) {
-			let Listing { id, asset_id, owner } = dof::remove<ID, Listing<T>>(
-				&mut platform.id,
-				vector::pop_back(&mut listing_ids)
-			);
-			assert!(campaign_creator == owner, ENotCampaignCreator);
-			let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
-			object::delete(id);
-			transfer::public_transfer(asset, tx_context::sender(ctx));
-		};
-		vector::destroy_empty(listing_ids);
+		let Listing { id, asset_id, owner } = dof::remove<ID, Listing<T>>(
+			&mut platform.id,
+			listing_id
+		);
+		assert!(campaign_creator == owner, ENotCampaignCreator);
+		let asset = dof::remove<ID, T>(&mut platform.id, asset_id);
+		object::delete(id);
+		transfer::public_transfer(asset, tx_context::sender(ctx));
 		event::emit(EventAssetsClaimed { winner: tx_context::sender(ctx) });
 	}
 

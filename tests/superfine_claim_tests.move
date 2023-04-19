@@ -62,22 +62,7 @@ module superfine::superfine_claim_tests {
 			let platform_value = test_scenario::take_shared<ClaimingPlatform>(scenario);
 			let platform = &mut platform_value;
 			let ctx = test_scenario::ctx(scenario);
-			asset_ids = superfine_claim::delist_assets<ExampleNft>(platform, listing_ids, ctx);
-			test_scenario::return_shared(platform_value);
-		};
-
-		// List this NFT again
-		test_scenario::next_tx(scenario, campaign_creator);
-		{
-			let platform_value = test_scenario::take_shared<ClaimingPlatform>(scenario);
-			let platform = &mut platform_value;
-			let assets = vector::empty<ExampleNft>();
-			while (vector::length(&asset_ids) > 0) {
-				let asset_id = vector::pop_back(&mut asset_ids);
-				vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, asset_id));
-			};
-			let ctx = test_scenario::ctx(scenario);
-			listing_ids = superfine_claim::list_assets(platform, assets, ctx);
+			superfine_claim::delist_asset<ExampleNft>(platform, *vector::borrow(&listing_ids, 3), ctx);
 			test_scenario::return_shared(platform_value);
 		};
 
@@ -87,13 +72,13 @@ module superfine::superfine_claim_tests {
 			let platform_value = test_scenario::take_shared<ClaimingPlatform>(scenario);
 			let platform = &mut platform_value;
 			let ctx = test_scenario::ctx(scenario);
-			superfine_claim::claim_assets<ExampleNft>(
+			superfine_claim::claim_asset<ExampleNft>(
 				platform,
 				b"ABCXYZXXX",
 				campaign_creator,
-				listing_ids,
+				*vector::borrow(&listing_ids, 7),
 				x"fa0786941b2cdde034b1f1d75e3079dc1058a5c1b59a1f33962c8bd5e12376b4",
-				x"f104848bba9208e78bbad3650836b754eaffc32abaab36a0cc36bac13bbc4723fdf19b1c1559e9c68ce8bb07143e1a35a6a1580ad0e82a370e32ea69767c0b0b",
+				x"d3363e4be3d9fa1cb6cf162741785d111799d6e6557651a72ef6a9a84b81d21e891ad0f84b3eb37e1b616804cd472cdcb0878568327ca0eb60bfedab26718407",
 				ctx,
 			);
 			test_scenario::return_shared(platform_value);
