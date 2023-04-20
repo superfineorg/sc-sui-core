@@ -1,3 +1,15 @@
+## The airdropping campaigns
+
+The campaign creator creates a campaign in the `auto-reward` mode and lists some assets as rewards. When the campaign ends, the operator wallet will automatically airdrop the rewards to the winners of the campaign.
+
+![airdrop-flow](./diagrams/airdrop.png)
+
+## The claiming campaigns
+
+The campaign creator creates a campaign in the `reward-claim` mode and lists some assets as rewards. When the campaign ends, the winners of the campaign can claim their rewards. The rewards each of them can claim is managed by the operator.
+
+![airdrop-flow](./diagrams/claim.png)
+
 ## Requirements
 
 ### Node.js
