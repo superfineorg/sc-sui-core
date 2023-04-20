@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PACKAGE = "0x8859979fe832f85f31a76965f940ab7885adda92e9cf94ffc422f3b75f0a606c";
-const AIRDROP_PLATFORM = "0xc2b119f5fdeca4f0a90679306a85f37be732a24786ca02aeafe043f2f346842b";
+const PACKAGE = "0xeda3b264a3943619406cc606bb6186bcc89384a8d80507921bb6d40a1a885f33";
+const AIRDROP_PLATFORM = "0x83b07961906cc65d77355f49622942b53774bc389a480dd0b0ddf7eabcc9c62a";
 const ADMIN = 0;
 const WINNER = 0;
 const CAMPAIGN_CREATOR = 0;
@@ -60,7 +60,6 @@ const createAirdropCampaign = async () => {
 
   // Create a new airdrop campaign
   let txb = new TransactionBlock();
-  let [coin] = txb.splitCoins(txb.gas, [txb.pure(airdroppingFee)]);
   txb.moveCall({
     target: `${PACKAGE}::superfine_airdrop::create_airdrop_campaign`,
     arguments: [
@@ -70,7 +69,7 @@ const createAirdropCampaign = async () => {
       txb.pure(airdroppingFee),
       txb.pure(operatorPubkeyBytes),
       txb.pure(signatureBytes),
-      coin
+      txb.gas
     ]
   });
   await executeTxb(txb, campaignCreatorSigner);
@@ -97,17 +96,16 @@ const updateCampaign = async () => {
 
   // Update this airdrop campaign
   let txb = new TransactionBlock();
-  let [coin] = txb.splitCoins(txb.gas, [txb.pure(newAirdroppingFee)]);
   txb.moveCall({
     target: `${PACKAGE}::superfine_airdrop::update_campaign`,
     arguments: [
       txb.object(AIRDROP_PLATFORM),
-      txb.pure(campaignId),
+      txb.pure("0x2d4d696f17103ce763278f47d94a97778010bd9973d6ab814533a012e12b16a4"),
       txb.pure(newNumAssets),
       txb.pure(newAirdroppingFee),
       txb.pure(operatorPubkeyBytes),
       txb.pure(signatureBytes),
-      coin
+      txb.gas
     ]
   });
   await executeTxb(txb, campaignCreatorSigner);
@@ -121,9 +119,11 @@ const listAssets = async () => {
     typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(AIRDROP_PLATFORM),
+      txb.pure("0xd23071b164ffdd93cf515575cc32666908824e62c6fe6bb8636f3842a0edc680"),
       txb.makeMoveVec({
         objects: [
-          txb.object("0xd984c13f4e5d0588f8de5ca2cf0f758813f9c8e453b8c705547f40e2cae1ee83")
+          txb.object("0x6c00df4569cab1cef5374827f2ccd20b8374240e571950c8e9b6410d2c34cb28"),
+          txb.object("0x7a960ff225b1734bbbfa3df1dfc78a8d52dcd0d8286c9b5b58a2229231011235")
         ]
       })
     ]
@@ -139,43 +139,28 @@ const delistAsset = async () => {
     typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(AIRDROP_PLATFORM),
-      txb.pure("0xd42aed59635ff6c24440def0d18c34eea35558219b22dcc88340a1202fc141c0")
+      txb.pure("0xd23071b164ffdd93cf515575cc32666908824e62c6fe6bb8636f3842a0edc680"),
+      txb.pure("0x6c00df4569cab1cef5374827f2ccd20b8374240e571950c8e9b6410d2c34cb28")
     ]
   });
   await executeTxb(txb, campaignCreator);
 };
 
 const airdropAsset = async () => {
-  const [, winnerPubkey, winner] = prepareSigner(process.env.MNEMONIC, WINNER);
-  const [, campaignCreatorPubkey,] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
-  const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
-
-  // Calculate the signature
-  let listingId = "0x35e54878b0d4f3ad0781fefaa3cbe6bd42523b18dda393be092600fdbc6afcdb";
-  let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
-  let message = new Uint8Array([
-    ...Array.from(new TextEncoder().encode("ABCXYZZZZ")),
-    ...hexToBytes(campaignCreatorPubkey.toSuiAddress()),
-    ...hexToBytes(winnerPubkey.toSuiAddress()),
-    ...hexToBytes(listingId),
-    ...operatorPubkeyBytes
-  ]);
-  let serializedSignature = await operatorSigner.signData(message);
-  let signatureBytes = Array.from(fromSerializedSignature(serializedSignature).signature);
-
-  // Claim this asset
+  const [, winnerPubkey,] = prepareSigner(process.env.MNEMONIC, WINNER);
+  const [, , operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
     target: `${PACKAGE}::superfine_airdrop::airdrop_asset`,
     typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(AIRDROP_PLATFORM),
-      txb.pure("0xd42aed59635ff6c24440def0d18c34eea35558219b22dcc88340a1202fc141c0"), // Campaign ID
-      txb.pure("0xd42aed59635ff6c24440def0d18c34eea35558219b22dcc88340a1202fc141c0"), // Asset ID
+      txb.pure("0xd23071b164ffdd93cf515575cc32666908824e62c6fe6bb8636f3842a0edc680"), // Campaign ID
+      txb.pure("0x7a960ff225b1734bbbfa3df1dfc78a8d52dcd0d8286c9b5b58a2229231011235"), // Asset ID
       txb.pure(winnerPubkey.toSuiAddress()),
     ]
   });
-  await executeTxb(txb, winner);
+  await executeTxb(txb, operatorSigner);
 };
 
-airdropAsset();
+updateCampaign();
