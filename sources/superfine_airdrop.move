@@ -237,6 +237,17 @@ module superfine::superfine_airdrop {
 		transfer::public_transfer(asset, winner);
 	}
 
+	public entry fun withdraw_airdropping_fee(
+		platform: &mut AirdropPlatform,
+		recipient: address,
+		ctx: &mut TxContext
+	) {
+		assert!(tx_context::sender(ctx) == platform.admin, ENotAdmin);
+		let all_fee = balance::value<SUI>(&platform.airdrop_fee);
+		let coin = coin::take<SUI>(&mut platform.airdrop_fee, all_fee, ctx);
+		transfer::public_transfer<Coin<SUI>>(coin, recipient);
+	}
+
 	fun u64_to_bytes(value: u64): vector<u8> {
 		let result = vector::empty<u8>();
 		let i = 0;

@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PACKAGE = "0xeda3b264a3943619406cc606bb6186bcc89384a8d80507921bb6d40a1a885f33";
-const AIRDROP_PLATFORM = "0x83b07961906cc65d77355f49622942b53774bc389a480dd0b0ddf7eabcc9c62a";
+const PACKAGE = "0x6df7cffe4fee7f51a793d8388a53c5d23912533d4aab22c116615b3d7ae86297";
+const AIRDROP_PLATFORM = "0x0b949e62db75b3fe1e2922982e723e431a04c1f7bb1b6950f6235141ab9523f9";
 const ADMIN = 0;
 const WINNER = 0;
 const CAMPAIGN_CREATOR = 0;
@@ -163,4 +163,17 @@ const airdropAsset = async () => {
   await executeTxb(txb, operatorSigner);
 };
 
-updateCampaign();
+const withdrawAirdroppingFee = async () => {
+  const [, adminPubkey, adminSigner] = prepareSigner(process.env.MNEMONIC, ADMIN);
+  let txb = new TransactionBlock();
+  txb.moveCall({
+    target: `${PACKAGE}::superfine_airdrop::withdraw_airdropping_fee`,
+    arguments: [
+      txb.object(AIRDROP_PLATFORM),
+      txb.pure(adminPubkey.toSuiAddress())
+    ]
+  });
+  await executeTxb(txb, adminSigner);
+};
+
+withdrawAirdroppingFee();

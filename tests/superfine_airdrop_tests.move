@@ -161,6 +161,20 @@ module superfine::superfine_airdrop_tests {
 			test_scenario::return_shared(platform_value);
 		};
 
+		// The admin withdraws all airdropping fee
+		test_scenario::next_tx(scenario, admin);
+		{
+			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
+			let platform = &mut platform_value;
+			let ctx = test_scenario::ctx(scenario);
+			superfine_airdrop::withdraw_airdropping_fee(
+				platform,
+				admin,
+				ctx
+			);
+			test_scenario::return_shared(platform_value);
+		};
+
 		test_scenario::end(scenario_value);
 	}
 }
