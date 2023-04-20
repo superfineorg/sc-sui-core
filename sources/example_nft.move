@@ -3,9 +3,14 @@ module superfine::example_nft {
 	use sui::object::{Self, ID, UID};
 	use sui::tx_context::TxContext;
 	use sui::transfer;
+	use sui::event;
 
 	struct ExampleNft has key, store {
 		id: UID
+	}
+
+	struct EventNftsMinted has copy, drop {
+		nft_ids: vector<ID>
 	}
 
 	public entry fun mint_nfts(
@@ -21,6 +26,7 @@ module superfine::example_nft {
 			vector::push_back(&mut nft_ids, nft_id);
 			quantity = quantity - 1;
 		};
+		event::emit(EventNftsMinted { nft_ids });
 		nft_ids
 	}
 }

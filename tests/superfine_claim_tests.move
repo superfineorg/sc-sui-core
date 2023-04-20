@@ -10,9 +10,9 @@ module superfine::superfine_claim_tests {
 	#[test]
 	public fun test_claim_assets() {
 		let admin = @0xA;
-		let operator = address::from_bytes(x"defbb0174ab3d1943fb093a8234596d35b8a39b8b82c7a83145715fb5dcd2adf");
-		let campaign_creator = @0xB;
-		let winner = @0xC;
+		let operator = address::from_bytes(x"b69ce65027f5fb6660e64412b30e750009c7e8c38927fc78041917cc673494cd");
+		let campaign_creator = address::from_bytes(x"b69ce65027f5fb6660e64412b30e750009c7e8c38927fc78041917cc673494cd");
+		let winner = address::from_bytes(x"b69ce65027f5fb6660e64412b30e750009c7e8c38927fc78041917cc673494cd");
 		let listing_ids: vector<ID>;
 		let asset_ids: vector<ID>;
 		
@@ -74,11 +74,11 @@ module superfine::superfine_claim_tests {
 			let ctx = test_scenario::ctx(scenario);
 			superfine_claim::claim_asset<ExampleNft>(
 				platform,
-				b"ABCXYZXXX",
+				b"ABCXYZZZZ",
 				campaign_creator,
 				*vector::borrow(&listing_ids, 7),
-				x"fa0786941b2cdde034b1f1d75e3079dc1058a5c1b59a1f33962c8bd5e12376b4",
-				x"d3363e4be3d9fa1cb6cf162741785d111799d6e6557651a72ef6a9a84b81d21e891ad0f84b3eb37e1b616804cd472cdcb0878568327ca0eb60bfedab26718407",
+				x"47e0f5c2321e5c0692fd098a8a4ab6601fbe8e9ad651139cc00b3a802c691541",
+				x"738fc1b426519159769df404333cf8c34cb3ee5723609d3b9e0feacd891e9e491ec53a8e4d2122f14725369f331e8a18a0085d6e978bb5e7a17140f3f1101f01",
 				ctx,
 			);
 			test_scenario::return_shared(platform_value);

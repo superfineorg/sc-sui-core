@@ -1,5 +1,6 @@
 import {
   Ed25519Keypair,
+  Ed25519PublicKey,
   JsonRpcProvider,
   RawSigner,
   SignerWithProvider,
@@ -28,14 +29,14 @@ export type SuiPackage = {
 
 export const prepareSigner = (mnemonic: string, addressIndex: number = 0): [
   JsonRpcProvider,
-  string,
+  Ed25519PublicKey,
   RawSigner
 ] => {
   const keypair = Ed25519Keypair.deriveKeypair(mnemonic, `m/44'/784'/0'/0'/${addressIndex}'`);
   const provider = new JsonRpcProvider(testnetConnection);
   return [
     provider,
-    keypair.getPublicKey().toSuiAddress(),
+    keypair.getPublicKey(),
     new RawSigner(keypair, provider)
   ];
 };
@@ -54,10 +55,14 @@ export const executeTxb = async (txb: TransactionBlock, signer: SignerWithProvid
       return;
     }
     console.log("RESPONSE", txResponse);
-    txResponse.events.forEach(event => console.log("### EVENT", event.parsedJson));
+    txResponse.events.forEach(event => console.log("# EVENT", event.parsedJson));
   } catch (err) {
     console.log("ERR", err);
   }
+};
+
+export const hexToBytes = (hexString: string): number[] => {
+  return Array.from(Buffer.from(hexString.replace("0x", ""), "hex"));
 };
 
 // const getObjectsInfo = (provider, objectIds) =>
