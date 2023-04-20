@@ -119,10 +119,10 @@ module superfine::superfine_airdrop_tests {
 			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
 			let platform = &mut platform_value;
 			let ctx = test_scenario::ctx(scenario);
-			superfine_airdrop::delist_assets<ExampleNft>(
+			superfine_airdrop::delist_asset<ExampleNft>(
 				platform,
 				campaign_id,
-				asset_ids,
+				*vector::borrow(&asset_ids, 2),
 				ctx
 			);
 			test_scenario::return_shared(platform_value);
@@ -134,12 +134,9 @@ module superfine::superfine_airdrop_tests {
 			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
 			let platform = &mut platform_value;
 			let assets = vector::empty<ExampleNft>();
-			while (vector::length(&asset_ids) > 0) {
-				let asset_id = vector::pop_back(&mut asset_ids);
-				vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, asset_id));
-			};
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 2)));
 			let ctx = test_scenario::ctx(scenario);
-			asset_ids = superfine_airdrop::list_assets(
+			superfine_airdrop::list_assets(
 				platform,
 				campaign_id,
 				assets,
@@ -154,10 +151,10 @@ module superfine::superfine_airdrop_tests {
 			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
 			let platform = &mut platform_value;
 			let ctx = test_scenario::ctx(scenario);
-			superfine_airdrop::airdrop_assets<ExampleNft>(
+			superfine_airdrop::airdrop_asset<ExampleNft>(
 				platform,
 				campaign_id,
-				asset_ids,
+				*vector::borrow(&asset_ids, 7),
 				winner,
 				ctx
 			);
