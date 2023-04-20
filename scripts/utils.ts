@@ -65,6 +65,15 @@ export const hexToBytes = (hexString: string): number[] => {
   return Array.from(Buffer.from(hexString.replace("0x", ""), "hex"));
 };
 
+export const uint64ToBytes = (value: number): number[] => {
+  let result: number[] = [];
+  for (let i = 0; i < 8; i++) {
+    result.push(value - (value >> 8) << 8);
+    value >>= 8;
+  }
+  return result;
+};
+
 // const getObjectsInfo = (provider, objectIds) =>
 //   provider.getObjectBatch(objectIds).then((info) => {
 //     return info.map((el) => {

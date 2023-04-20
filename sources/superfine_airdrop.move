@@ -12,6 +12,7 @@ module superfine::superfine_airdrop {
     use sui::sui::SUI;
 	use sui::address;
 	use sui::balance::{Self, Balance};
+	use sui::event;
 
 	const ECampaignAirdropStarted: u64 = 135289670000;
 	const ENotCampaignCreator: u64 = 135289670000 + 1;
@@ -38,6 +39,14 @@ module superfine::superfine_airdrop {
 		charged_fee: u64,
 		airdrop_started: bool,
 		asset_count: u64
+	}
+
+	struct EventCampaignCreated has copy, drop {
+		campaign_id: ID
+	}
+
+	struct EventCampaignUpdated has copy, drop {
+		campaign_id: ID
 	}
 
 	fun init(ctx: &mut TxContext) {
@@ -115,6 +124,7 @@ module superfine::superfine_airdrop {
 		vec_set::insert(&mut platform.campaign_ids, campaign_id);
 		let cid = object::id(&campaign);
 		dof::add(&mut platform.id, cid, campaign);
+		event::emit(EventCampaignCreated { campaign_id: cid });
 		cid
 	}
 
@@ -163,7 +173,9 @@ module superfine::superfine_airdrop {
 		if (new_airdrop_fee > campaign.charged_fee) {
 			campaign.charged_fee = new_airdrop_fee;
 		};
-		object::id(campaign)
+		let cid = object::id(campaign);
+		event::emit(EventCampaignUpdated { campaign_id: cid });
+		cid
 	}
 
 	public entry fun list_assets<T: key + store>(

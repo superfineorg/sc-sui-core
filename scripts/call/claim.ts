@@ -24,7 +24,7 @@ const mintNfts = async () => {
   await executeTxb(txb, creatorSigner);
 };
 
-const setOperators = async () => {
+const setOperator = async () => {
   const [, , admin] = prepareSigner(process.env.MNEMONIC, ADMIN);
   const [, operatorPubkey,] = prepareSigner(process.env.MNEMONIC, OPERATOR);
   let txb = new TransactionBlock();
@@ -77,10 +77,11 @@ const claimAsset = async () => {
   const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
 
   // Calculate the signature
+  let campaignId = "ABCXYZZZZ";
   let listingId = "0x35e54878b0d4f3ad0781fefaa3cbe6bd42523b18dda393be092600fdbc6afcdb";
   let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
   let message = new Uint8Array([
-    ...Array.from(new TextEncoder().encode("ABCXYZZZZ")),
+    ...Array.from(new TextEncoder().encode(campaignId)),
     ...hexToBytes(campaignCreatorPubkey.toSuiAddress()),
     ...hexToBytes(winnerPubkey.toSuiAddress()),
     ...hexToBytes(listingId),
@@ -96,7 +97,7 @@ const claimAsset = async () => {
     typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(CLAIMING_PLATFORM),
-      txb.pure("ABCXYZZZZ"),
+      txb.pure(campaignId),
       txb.pure(campaignCreatorPubkey.toSuiAddress()),
       txb.pure(listingId),
       txb.pure(operatorPubkeyBytes),
