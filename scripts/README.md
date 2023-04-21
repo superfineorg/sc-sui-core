@@ -31,7 +31,7 @@ $ ts-node scripts/call/airdrop.ts setOperator
 $ ts-node scripts/call/airdrop.ts createAirdropCampaign
 
 # The campaign creator updates his campaign
-$ ts-node scripts/call/airdrop.ts updateCampaign
+$ ts-node scripts/call/airdrop.ts updateCampaign <campaign-id>
 
 # The campaign creator lists some assets to his campaign
 $ ts-node scripts/call/airdrop.ts listAssets <campaign-id> <some-asset-ids>
@@ -59,8 +59,8 @@ $ ts-node scripts/call/claim.ts setOperator
 $ ts-node scripts/call/claim.ts listAssets <some-asset-ids>
 
 # The campaign creator delist an asset
-$ ts-node scripts/call/claim.ts delistAsset <asset-id>
+$ ts-node scripts/call/claim.ts delistAsset <listing-id>
 
 # The campaign winner claim his reward
-$ ts-node scripts/call/claim.ts claimAsset <asset-id>
+$ ts-node scripts/call/claim.ts claimAsset <listing-id>
 ```

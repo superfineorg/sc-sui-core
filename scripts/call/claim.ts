@@ -52,7 +52,7 @@ const listAssets = async (assetIds: string[]) => {
   await executeTxb(txb, campaignCreator);
 };
 
-const delistAsset = async (assetId: string) => {
+const delistAsset = async (listingId: string) => {
   const [, , campaignCreator] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
@@ -60,7 +60,7 @@ const delistAsset = async (assetId: string) => {
     typeArguments: [`${process.env.PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(process.env.CLAIMING_PLATFORM),
-      txb.pure(assetId)
+      txb.pure(listingId)
     ]
   });
   await executeTxb(txb, campaignCreator);

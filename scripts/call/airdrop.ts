@@ -74,14 +74,13 @@ const createAirdropCampaign = async () => {
   await executeTxb(txb, campaignCreatorSigner);
 };
 
-const updateCampaign = async () => {
+const updateCampaign = async (campaignId: string) => {
   const [, campaignCreatorPubkey, campaignCreatorSigner] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
 
   // Calculate the signature
-  let campaignId = "ABCXXXUUU";
   let newNumAssets = 11;
-  let newAirdroppingFee = 14;
+  let newAirdroppingFee = 1;
   let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
   let message = new Uint8Array([
     ...Array.from(new TextEncoder().encode(campaignId)),
@@ -186,7 +185,11 @@ const main = async () => {
       await createAirdropCampaign();
       break;
     case "updateCampaign":
-      await updateCampaign();
+      if (ARGUMENTS.length < 4) {
+        console.error("Please provide the campaign ID to update");
+        process.exit(1);
+      }
+      await updateCampaign(ARGUMENTS[3]);
       break;
     case "listAssets":
       if (ARGUMENTS.length < 5) {
