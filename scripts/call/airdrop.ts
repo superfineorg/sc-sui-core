@@ -80,10 +80,10 @@ const updateCampaign = async (campaignId: string) => {
 
   // Calculate the signature
   let newNumAssets = 11;
-  let newAirdroppingFee = 1;
+  let newAirdroppingFee = 14;
   let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
   let message = new Uint8Array([
-    ...Array.from(new TextEncoder().encode(campaignId)),
+    ...Array.from(new TextEncoder().encode("ABCXXXUUU")),
     ...hexToBytes(campaignCreatorPubkey.toSuiAddress()),
     ...uint64ToBytes(newNumAssets),
     ...uint64ToBytes(newAirdroppingFee),
@@ -98,7 +98,7 @@ const updateCampaign = async (campaignId: string) => {
     target: `${process.env.PACKAGE}::superfine_airdrop::update_campaign`,
     arguments: [
       txb.object(process.env.AIRDROP_PLATFORM),
-      txb.pure("0x2d4d696f17103ce763278f47d94a97778010bd9973d6ab814533a012e12b16a4"),
+      txb.pure(campaignId),
       txb.pure(newNumAssets),
       txb.pure(newAirdroppingFee),
       txb.pure(operatorPubkeyBytes),
