@@ -2,12 +2,15 @@ import { TransactionBlock } from "@mysten/sui.js";
 import fs from "fs/promises";
 import { prepareSigner, SuiObject } from "./utils";
 import { execSync } from "child_process";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const MODULE = "SuiSmartContracts";
 const DEPLOY_INFO_PATH = "./deployed_modules/output.json";
 
 const publish = async () => {
-  const [provider, , signer] = prepareSigner(process.env.MNEMONIC);
+  const [provider, , deployer] = prepareSigner(process.env.MNEMONIC);
   const compiledResult: { modules: string[], dependencies: string[]; } = JSON.parse(
     execSync(
       `sui move build --dump-bytecode-as-base64`,
@@ -21,9 +24,9 @@ const publish = async () => {
     txb.publish(compiledResult);
 
     // Execute this transaction block and analyze the response
-    let gas = await signer.getGasCostEstimation({ transactionBlock: txb });
+    let gas = await deployer.getGasCostEstimation({ transactionBlock: txb });
     txb.setGasBudget(gas);
-    const txResponse = await signer.signAndExecuteTransactionBlock({
+    const txResponse = await deployer.signAndExecuteTransactionBlock({
       transactionBlock: txb,
       options: { showEffects: true, showEvents: true },
       requestType: "WaitForEffectsCert"

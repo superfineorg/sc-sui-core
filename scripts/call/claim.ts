@@ -4,21 +4,20 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PACKAGE = "0x8859979fe832f85f31a76965f940ab7885adda92e9cf94ffc422f3b75f0a606c";
-const CLAIMING_PLATFORM = "0xc2b119f5fdeca4f0a90679306a85f37be732a24786ca02aeafe043f2f346842b";
+const ARGUMENTS = process.argv;
 const ADMIN = 0;
-const WINNER = 0;
-const CAMPAIGN_CREATOR = 0;
-const OPERATOR = 0;
+const OPERATOR = 1;
+const CAMPAIGN_CREATOR = 2;
+const WINNER = 3;
 
 const mintNfts = async () => {
   const [, creatorPubkey, creatorSigner] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
-    target: `${PACKAGE}::example_nft::mint_nfts`,
+    target: `${process.env.PACKAGE}::example_nft::mint_nfts`,
     arguments: [
       txb.pure(creatorPubkey.toSuiAddress()),
-      txb.pure(7)
+      txb.pure(10)
     ]
   });
   await executeTxb(txb, creatorSigner);
@@ -29,9 +28,9 @@ const setOperator = async () => {
   const [, operatorPubkey,] = prepareSigner(process.env.MNEMONIC, OPERATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
-    target: `${PACKAGE}::superfine_claim::set_operator`,
+    target: `${process.env.PACKAGE}::superfine_claim::set_operator`,
     arguments: [
-      txb.object(CLAIMING_PLATFORM),
+      txb.object(process.env.CLAIMING_PLATFORM),
       txb.pure(operatorPubkey.toSuiAddress()),
       txb.pure(true)
     ]
@@ -39,46 +38,41 @@ const setOperator = async () => {
   await executeTxb(txb, admin);
 };
 
-const listAssets = async () => {
+const listAssets = async (assetIds: string[]) => {
   const [, , campaignCreator] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
-    target: `${PACKAGE}::superfine_claim::list_assets`,
-    typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
+    target: `${process.env.PACKAGE}::superfine_claim::list_assets`,
+    typeArguments: [`${process.env.PACKAGE}::example_nft::ExampleNft`],
     arguments: [
-      txb.object(CLAIMING_PLATFORM),
-      txb.makeMoveVec({
-        objects: [
-          txb.object("0xd984c13f4e5d0588f8de5ca2cf0f758813f9c8e453b8c705547f40e2cae1ee83")
-        ]
-      })
+      txb.object(process.env.CLAIMING_PLATFORM),
+      txb.makeMoveVec({ objects: assetIds.map(assetId => txb.object(assetId)) })
     ]
   });
   await executeTxb(txb, campaignCreator);
 };
 
-const delistAsset = async () => {
+const delistAsset = async (assetId: string) => {
   const [, , campaignCreator] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   let txb = new TransactionBlock();
   txb.moveCall({
-    target: `${PACKAGE}::superfine_claim::delist_asset`,
-    typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
+    target: `${process.env.PACKAGE}::superfine_claim::delist_asset`,
+    typeArguments: [`${process.env.PACKAGE}::example_nft::ExampleNft`],
     arguments: [
-      txb.object(CLAIMING_PLATFORM),
-      txb.pure("0xd42aed59635ff6c24440def0d18c34eea35558219b22dcc88340a1202fc141c0")
+      txb.object(process.env.CLAIMING_PLATFORM),
+      txb.pure(assetId)
     ]
   });
   await executeTxb(txb, campaignCreator);
 };
 
-const claimAsset = async () => {
+const claimAsset = async (listingId: string) => {
   const [, winnerPubkey, winner] = prepareSigner(process.env.MNEMONIC, WINNER);
   const [, campaignCreatorPubkey,] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
 
   // Calculate the signature
   let campaignId = "ABCXYZZZZ";
-  let listingId = "0x35e54878b0d4f3ad0781fefaa3cbe6bd42523b18dda393be092600fdbc6afcdb";
   let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
   let message = new Uint8Array([
     ...Array.from(new TextEncoder().encode(campaignId)),
@@ -93,10 +87,10 @@ const claimAsset = async () => {
   // Claim this asset
   let txb = new TransactionBlock();
   txb.moveCall({
-    target: `${PACKAGE}::superfine_claim::claim_asset`,
-    typeArguments: [`${PACKAGE}::example_nft::ExampleNft`],
+    target: `${process.env.PACKAGE}::superfine_claim::claim_asset`,
+    typeArguments: [`${process.env.PACKAGE}::example_nft::ExampleNft`],
     arguments: [
-      txb.object(CLAIMING_PLATFORM),
+      txb.object(process.env.CLAIMING_PLATFORM),
       txb.pure(campaignId),
       txb.pure(campaignCreatorPubkey.toSuiAddress()),
       txb.pure(listingId),
@@ -107,4 +101,43 @@ const claimAsset = async () => {
   await executeTxb(txb, winner);
 };
 
-claimAsset();
+const main = async () => {
+  if (ARGUMENTS.length < 3) {
+    console.error("Please provide the method");
+    process.exit(1);
+  }
+  switch (ARGUMENTS[2]) {
+    case "mintNfts":
+      await mintNfts();
+      break;
+    case "setOperator":
+      await setOperator();
+      break;
+    case "listAssets":
+      if (ARGUMENTS.length < 4) {
+        console.error("Please provide at least 1 asset ID to list");
+        process.exit(1);
+      }
+      await listAssets(ARGUMENTS.slice(3));
+      break;
+    case "delistAsset":
+      if (ARGUMENTS.length < 4) {
+        console.error("Please provide the listing ID to delist");
+        process.exit(1);
+      }
+      await delistAsset(ARGUMENTS[3]);
+      break;
+    case "claimAsset":
+      if (ARGUMENTS.length < 4) {
+        console.error("Please provide the listing ID to claim the asset");
+        process.exit(1);
+      }
+      await claimAsset(ARGUMENTS[3]);
+      break;
+    default:
+      console.error("Unknown method");
+      process.exit(1);
+  }
+};
+
+main();
