@@ -157,14 +157,14 @@ const airdropAsset = async (campaignId: string, assetId: string) => {
   await executeTxb(txb, operatorSigner);
 };
 
-const withdrawAirdroppingFee = async (recipient: string) => {
-  const [, , adminSigner] = prepareSigner(process.env.MNEMONIC, ADMIN);
+const withdrawAirdroppingFee = async () => {
+  const [, adminPubkey, adminSigner] = prepareSigner(process.env.MNEMONIC, ADMIN);
   let txb = new TransactionBlock();
   txb.moveCall({
     target: `${process.env.PACKAGE}::superfine_airdrop::withdraw_airdropping_fee`,
     arguments: [
       txb.object(process.env.AIRDROP_PLATFORM),
-      txb.pure(recipient)
+      txb.pure(adminPubkey.toSuiAddress())
     ]
   });
   await executeTxb(txb, adminSigner);
@@ -210,11 +210,7 @@ const main = async () => {
       await airdropAsset(ARGUMENTS[3], ARGUMENTS[4]);
       break;
     case "withdrawAirdroppingFee":
-      if (ARGUMENTS.length < 4) {
-        console.error("Please provide the recipient address to withdraw");
-        process.exit(1);
-      }
-      await withdrawAirdroppingFee(ARGUMENTS[3]);
+      await withdrawAirdroppingFee();
       break;
     default:
       console.error("Unknown method");

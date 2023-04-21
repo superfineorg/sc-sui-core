@@ -6,7 +6,7 @@ The campaign creator creates a campaign in the `auto-reward` mode and lists some
 
 ## The claiming campaigns
 
-The campaign creator creates a campaign in the `reward-claim` mode and lists some assets as rewards. When the campaign ends, the winners of the campaign can claim their rewards. The rewards each of them can claim is managed by the operator.
+The campaign creator creates a campaign in the `reward-claim` mode and lists some assets as rewards. When the campaign ends, the winners of the campaign can claim their rewards. The rewards each of them can claim are managed by the operator.
 
 ![airdrop-flow](./diagrams/claim.png)
 
@@ -48,8 +48,6 @@ $ sui move build
 $ sui client publish --gas-budget 30000000
 ```
 
-## Interact with the contracts
+## Interact with the modules
 
-```shell
-$ ts-node scripts/call/claim.ts
-```
+See [How to interact with the modules](./scripts/README.md).
