@@ -1,5 +1,23 @@
 ## How to interact with the modules
 
+### Set up the environments
+
+First, make sure that 4 first accounts generated from your mnemonic have enough SUI coins to interact with the modules.
+
+```shell
+# Prepare .env
+$ cp .env.example .env
+
+# Fill your mnemonic to the MNEMONIC field
+
+# Publish the package to Sui Testnet
+$ sui client publish --gas-budget 300000000
+
+# Prepare the package address and 2 module addresses:
+# Copy these addresses from the output of the previous command
+# to the PACKAGE, CLAIMING_PLATFORM and AIRDROP_PLATFORM fields
+```
+
 ### SuperfineAirdrop
 
 ```shell

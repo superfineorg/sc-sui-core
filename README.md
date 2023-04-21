@@ -45,7 +45,7 @@ $ sui move build
 ## Publish the package
 
 ```shell
-$ sui client publish --gas-budget 30000000
+$ sui client publish --gas-budget 300000000
 ```
 
 ## Interact with the modules
