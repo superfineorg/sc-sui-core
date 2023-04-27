@@ -28,7 +28,7 @@ $ ts-node scripts/call/airdrop.ts mintNfts
 $ ts-node scripts/call/airdrop.ts setOperator
 
 # The campaign creator creates an airdropping campaign
-$ ts-node scripts/call/airdrop.ts createAirdropCampaign
+$ ts-node scripts/call/airdrop.ts createAirdropCampaign <some-asset-ids>
 
 # The campaign creator updates his campaign
 $ ts-node scripts/call/airdrop.ts updateCampaign <campaign-id>

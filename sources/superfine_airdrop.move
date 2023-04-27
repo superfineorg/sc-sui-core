@@ -77,11 +77,12 @@ module superfine::superfine_airdrop {
 		}
 	}
 
-	public entry fun create_airdrop_campaign(
+	public entry fun create_airdrop_campaign<T: key + store>(
 		platform: &mut AirdropPlatform,
 		campaign_id: vector<u8>,
 		num_assets: u64,
 		airdrop_fee: u64,
+		assets: vector<T>,
 		operator_pubkey: vector<u8>,
 		signature: vector<u8>,
 		payment: &mut Coin<SUI>,
@@ -124,6 +125,10 @@ module superfine::superfine_airdrop {
 		vec_set::insert(&mut platform.campaign_ids, campaign_id);
 		let cid = object::id(&campaign);
 		dof::add(&mut platform.id, cid, campaign);
+
+		// List some initial assets
+		list_assets<T>(platform, cid, assets, ctx);
+
 		event::emit(EventCampaignCreated { campaign_id: cid });
 		cid
 	}

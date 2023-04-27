@@ -38,7 +38,7 @@ const setOperator = async () => {
   await executeTxb(txb, admin);
 };
 
-const createAirdropCampaign = async () => {
+const createAirdropCampaign = async (assetIds: string[]) => {
   const [, campaignCreatorPubkey, campaignCreatorSigner] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
 
@@ -61,11 +61,13 @@ const createAirdropCampaign = async () => {
   let txb = new TransactionBlock();
   txb.moveCall({
     target: `${process.env.PACKAGE}::superfine_airdrop::create_airdrop_campaign`,
+    typeArguments: [`${process.env.PACKAGE}::example_nft::ExampleNft`],
     arguments: [
       txb.object(process.env.AIRDROP_PLATFORM),
       txb.pure(campaignId),
       txb.pure(numAssets),
       txb.pure(airdroppingFee),
+      txb.makeMoveVec({ objects: assetIds.map(assetId => txb.object(assetId)) }),
       txb.pure(operatorPubkeyBytes),
       txb.pure(signatureBytes),
       txb.gas
@@ -182,7 +184,7 @@ const main = async () => {
       await setOperator();
       break;
     case "createAirdropCampaign":
-      await createAirdropCampaign();
+      await createAirdropCampaign(ARGUMENTS.slice(3));
       break;
     case "updateCampaign":
       if (ARGUMENTS.length < 4) {

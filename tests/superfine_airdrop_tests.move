@@ -55,12 +55,17 @@ module superfine::superfine_airdrop_tests {
 			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
 			let platform = &mut platform_value;
 			let coin = test_scenario::take_from_sender_by_id<Coin<SUI>>(scenario, coin_id);
+			let assets = vector::empty<ExampleNft>();
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 2)));
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 4)));
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 6)));
 			let ctx = test_scenario::ctx(scenario);
-			campaign_id = superfine_airdrop::create_airdrop_campaign(
+			campaign_id = superfine_airdrop::create_airdrop_campaign<ExampleNft>(
 				platform,
 				b"ABCXYZXXX",
 				10,
 				4,
+				assets,
 				x"fa0786941b2cdde034b1f1d75e3079dc1058a5c1b59a1f33962c8bd5e12376b4",
 				x"b0d04093b8b660fa4dfead604f65cd5213a94459a3ecde8dc3ff175e4ea71d86a12419e86d347bd5a3a42fe66936d972334ae66ed043ec97343c5d0266c15904",
 				&mut coin,
@@ -99,12 +104,12 @@ module superfine::superfine_airdrop_tests {
 			let platform_value = test_scenario::take_shared<AirdropPlatform>(scenario);
 			let platform = &mut platform_value;
 			let assets = vector::empty<ExampleNft>();
-			while (vector::length(&asset_ids) > 0) {
-				let asset_id = vector::pop_back(&mut asset_ids);
-				vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, asset_id));
-			};
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 1)));
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 3)));
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 5)));
+			vector::push_back(&mut assets, test_scenario::take_from_sender_by_id<ExampleNft>(scenario, *vector::borrow(&asset_ids, 7)));
 			let ctx = test_scenario::ctx(scenario);
-			asset_ids = superfine_airdrop::list_assets(
+			superfine_airdrop::list_assets(
 				platform,
 				campaign_id,
 				assets,
