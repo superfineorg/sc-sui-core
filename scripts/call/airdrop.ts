@@ -76,6 +76,47 @@ const createAirdropCampaign = async (assetIds: string[]) => {
   await executeTxb(txb, campaignCreatorSigner);
 };
 
+/* Make sure that the campaign creator account has at least 7 coins to airdrop */
+const createCoinAirdropCampaign = async () => {
+  const [, campaignCreatorPubkey, campaignCreatorSigner] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
+  const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
+
+  // Calculate the signature
+  let amounts = [1, 3, 1, 2];
+  let campaignId = "ABCXXXUUUIII";
+  let numAssets = 10;
+  let airdroppingFee = 12;
+  let operatorPubkeyBytes = Array.from(operatorPubkey.toBytes());
+  let message = new Uint8Array([
+    ...Array.from(new TextEncoder().encode(campaignId)),
+    ...hexToBytes(campaignCreatorPubkey.toSuiAddress()),
+    ...uint64ToBytes(numAssets),
+    ...uint64ToBytes(airdroppingFee),
+    ...operatorPubkeyBytes
+  ]);
+  let serializedSignature = await operatorSigner.signData(message);
+  let signatureBytes = Array.from(fromSerializedSignature(serializedSignature).signature);
+
+  // Create a new airdrop campaign
+  let txb = new TransactionBlock();
+  let coins = txb.splitCoins(txb.gas, amounts.map(amount => txb.pure(amount)));
+  txb.moveCall({
+    target: `${process.env.PACKAGE}::superfine_airdrop::create_airdrop_campaign`,
+    typeArguments: ["0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin"],
+    arguments: [
+      txb.object(process.env.AIRDROP_PLATFORM),
+      txb.pure(campaignId),
+      txb.pure(numAssets),
+      txb.pure(airdroppingFee),
+      txb.makeMoveVec({ objects: amounts.map((_, index) => coins[index]) }),
+      txb.pure(operatorPubkeyBytes),
+      txb.pure(signatureBytes),
+      txb.gas
+    ]
+  });
+  await executeTxb(txb, campaignCreatorSigner);
+};
+
 const updateCampaign = async (campaignId: string) => {
   const [, campaignCreatorPubkey, campaignCreatorSigner] = prepareSigner(process.env.MNEMONIC, CAMPAIGN_CREATOR);
   const [, operatorPubkey, operatorSigner] = prepareSigner(process.env.MNEMONIC, OPERATOR);
@@ -185,6 +226,9 @@ const main = async () => {
       break;
     case "createAirdropCampaign":
       await createAirdropCampaign(ARGUMENTS.slice(3));
+      break;
+    case "createCoinAirdropCampaign":
+      await createCoinAirdropCampaign();
       break;
     case "updateCampaign":
       if (ARGUMENTS.length < 4) {
