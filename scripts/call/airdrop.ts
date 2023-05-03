@@ -102,7 +102,7 @@ const createCoinAirdropCampaign = async () => {
   let coins = txb.splitCoins(txb.gas, amounts.map(amount => txb.pure(amount)));
   txb.moveCall({
     target: `${process.env.PACKAGE}::superfine_airdrop::create_airdrop_campaign`,
-    typeArguments: ["0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin"],
+    typeArguments: ["0x2::coin::Coin<0x2::sui::SUI>"],
     arguments: [
       txb.object(process.env.AIRDROP_PLATFORM),
       txb.pure(campaignId),
