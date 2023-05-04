@@ -43,7 +43,8 @@ module superfine::superfine_airdrop {
 
 	struct EventCampaignCreated has copy, drop {
 		id: ID,
-		campaign_id: vector<u8>
+		campaign_id: vector<u8>,
+		asset_ids: vector<ID>
 	}
 
 	struct EventCampaignUpdated has copy, drop {
@@ -128,9 +129,13 @@ module superfine::superfine_airdrop {
 		dof::add(&mut platform.id, cid, campaign);
 
 		// List some initial assets
-		list_assets<T>(platform, cid, assets, ctx);
+		let asset_ids = list_assets<T>(platform, cid, assets, ctx);
 
-		event::emit(EventCampaignCreated { id: cid, campaign_id });
+		event::emit(EventCampaignCreated {
+			id: cid,
+			campaign_id,
+			asset_ids
+		});
 		cid
 	}
 
